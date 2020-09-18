@@ -1,0 +1,4 @@
+# bootloadHID
+# https://beta.docs.qmk.fm/faqs/faq_build
+# Resolves 'Missing udev rules for 'bootloadhid' boards. You'll need to use `sudo` in order to flash them.'
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="05df", TAG+="uaccess", RUN{builtin}+="uaccess"

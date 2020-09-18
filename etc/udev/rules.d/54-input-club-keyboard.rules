@@ -1,0 +1,4 @@
+# https://beta.docs.qmk.fm/faqs/faq_build
+# Resolves 'Missing udev rules for 'input_club' boards. You'll need to use `sudo` in order to flash them.'
+# Input Club keyboard bootloader
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1c11", ATTRS{idProduct}=="b007", TAG+="uaccess", RUN{builtin}+="uaccess"
