@@ -1,0 +1,120 @@
+= QMK
+:icons: font
+:toc: macro
+
+toc::[]
+
+
+== Setup
+
+=== qmk tool
+
+Use `pyenv` instead of `pipx` to manage `qmk`.
+While `pipx` is simpler, some of the utils in `qmk/qmk_firmware` try to
+install using user `pip`, and it's easier to contain them from a virtual env.
+
+[source,sh]
+----
+export PYENV_ROOT="$HOME/tools/pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+git clone https://github.com/pyenv/pyenv.git "${PYENV_ROOT}"  # <1>
+hash -r
+
+git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv  # <2>
+
+pyenv virtualenv system qmk  # <3>
+pyenv activate qmk  # <4>
+
+pyenv exec pip install -U pip setuptools  # <5>
+pyenv exec pip install qmk  # <6>
+----
+<1>: install pyenv
+<2>: install pyenv-virtualenv
+<3>: create a virtual environment. if your system python is not already python3,
+     you should use `pyenv install 3.6.8` (or similar) and use that instead
+     of `system`.
+<4>: if `pyenv virtualenv-init` has not been configured, activate the
+     virtual environment to ensure that its `python` and `pip` are used.
+<5>: always do the `pip` dance in case your system `venv` uses an old `pip`
+<6>: install qmk
+
+
+=== qmk system dependencies
+
+[source,sh]
+----
+qmk setup [-H path/to/qmk_firmware] justsh/qmk_firmware  # <1>
+----
+<1>: If a path is given to qmk setup `-H`, it is used as QMK_HOME. +
+     Setup will also clone `qmk_firmware` if it does not yet exist. +
+     The final argument is the fork of qmk to use when cloning.
+
+
+=== Linux configuration
+
+[NOTE]
+====
+`qmk setup` will install the needed dependencies onto the system, but
+it may fail tests for udev rules or ModemManager.
+This section uses files found on the qmk FAQ
+(in the beta section at time of writing) to resolve those warnings
+and prevent needing to use `sudo` to flash devices.
+====
+
+On linux, copy the contents of `qmk_firmware/etc` to `/etc` and reload
+udev (and ModemManager) as needed.
+
+[source,sh]
+----
+rsync -av ./etc/systemd/system/ModemManager.service.d/ /etc/systemd/system/ModemManager.service.d/
+rsync -av ./etc/udev/rules.d/ /etc/udev/rules.d/
+
+sudo systemctl daemon-reload
+sudo systemctl restart ModemManager
+
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+----
+
+== QMK Container
+
+Alternatively, `qmk` can be run from a container.
+
+While `qmk` uses `docker`, using `podman-docker` on Fedora and adding
+`--privileged` to the `docker` command at the end of `util/docker_build.sh`
+makes everything work.
+
+
+== Quick Reference
+
+[NOTE]
+====
+Official qmk docs suggest using your github username as the keymap name, but
+I'm not gonna do that.
+====
+
+.Create a new keymap
+[source,sh]
+----
+qmk new-keymap -kb bdn9 -km bdn9ght
+----
+
+[CAUTION]
+====
+If using Elite-C boards, remember to set the bootloader for your new keymap
+in a `rules.mk` file.
+====
+
+
+.Compile the keymap
+[source,sh]
+----
+qmk compile -kb bdn9 -km bdn9ght
+----
+
+
+.Flash the keyboard
+[source,sh]
+----
+qmk flash -kb bdn9 -km bdn9ght
+----
